@@ -1,0 +1,178 @@
+﻿@page "/"
+
+@rendermode InteractiveServer
+
+<!--TODO: fix the layout.-->
+<!--TODO: All the selects need to be loaded programatically. Consider separating these into components when done setting this up.-->
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+<br />
+<!--Select for the tag that you're filteirng for-->
+<select id="tagsDropdown" @bind=matchingTag>
+    @foreach (var item in tagDropdownList)
+    {
+        <option value ="@item">@item</option>
+    }
+</select>
+
+<!--Select for the attribute you're searching for-->
+<select id="attributes">
+    <!--Example of how to implement it based on the Rhyme Tag.-->
+    <option value ="placeholder">label = "A"</option>
+    <option value="placeholder">label = "B"</option>
+</select>
+<br />
+<input type="button" value="Search" @onclick="FilterXml"/>
+<input type="button" value="Load Document" @onclick="LoadXmlDocument" />
+<input type="button" value="Populate Dropdown" @onclick="LoadTagDropdownArray" />
+
+
+<br />
+<br />
+<!--File upload form, needs to accept XML files.-->
+<!--In the future see if I can have a folder uploaded and it read XML files from it.-->
+<form>
+    <input type="file" id="myFile" name="myFile" />
+    <input type="submit" />
+</form>
+
+<br />
+<br />
+<br />
+<div>
+    <p>Output here</p>
+    <div>
+        @foreach (var item in xmlOutputList)
+        {
+            <p>@item</p>
+        }
+    </div>
+    <p><span>[Location of Matching Tag]</span>: <span>Content of Matching Tag</span></p>
+    <p><span>[Location of Matching Tag]</span>: <span>Content of Matching Tag</span></p>
+    <p><span>[Location of Matching Tag]</span>: <span>Content of Matching Tag</span></p>
+</div>
+
+@code {
+    //implement code to run when page loads.
+
+    private XmlDocument xmlDoc = new XmlDocument();
+    List<String> tagDropdownList = new List<String>();
+    List<String> attributeDropdownList = new List<String>();
+
+
+    List<String> xmlOutputList = new List<String>();
+    String matchingTag = "l";
+
+
+    //load xml document based on form
+    private void LoadXmlDocument()
+    {
+        Console.WriteLine("Load XMl Document Active");
+        //TODO: add some code based off the form.
+
+        xmlDoc.Load("TESTING.XmlFiles/test.xml");
+    }
+
+
+    //load tag dropdown
+    private void LoadTagDropdownArray()
+    {
+        //get list of tags within the parent into a collection
+        //populate the dropdown with it.
+        Console.WriteLine("Populate Tag Dropdown Active");
+
+
+        var rootNode = xmlDoc.GetElementsByTagName("root")[0];
+
+        foreach (XmlElement element in rootNode.ChildNodes)
+        {
+
+            AddTagsToArray(element);
+
+        }
+
+        //gets all of the tags from the file and adds it through minor recursion
+        void AddTagsToArray(XmlElement element)
+        {
+            if (element.HasChildNodes)
+            {
+                foreach (var elementChild in element.ChildNodes)
+                {
+                    if (elementChild.GetType() == typeof(XmlElement))
+                    {
+                        AddTagsToArray((XmlElement)elementChild);
+                    }
+
+                }
+            }
+
+            if (!tagDropdownList.Contains(element.Name))
+            {
+                tagDropdownList.Add(element.Name);
+            }
+
+        }
+
+    }
+
+
+    //load attribute dropdown
+    //it needs to update based on the selected Tag.
+    //If the tag doesn't have an attribute it needs to say None,
+    //Otherwise it needs to list the attributes of the Tag
+    //Not correct description, refer to the XML file and Rhyme and think over this
+    //visualization for how I can possibly implement it notated above.
+    //may possibly come back to this later and get the basic filter by Tag working.
+    private void LoadAttributeDropdownArray()
+    {
+
+    }
+
+
+    //filter
+    //holy shit it mostly works.
+    private void FilterXml()
+    {
+        //get the value of the selected option
+        //find elements with matching labels
+        //add it to the output arraylist
+        //loop through the results and print it out.
+        var rootNode = xmlDoc.GetElementsByTagName("root")[0];
+
+        //placeholder
+
+
+
+        foreach(XmlElement element in rootNode.ChildNodes)
+        {
+            parseThroughTags(element);
+        }
+
+        void parseThroughTags(XmlElement element)
+        {
+            if(element.Name == matchingTag)
+            {
+                xmlOutputList.Add(element.InnerText);
+
+            }
+
+            if (element.HasChildNodes)
+            {
+                foreach(var elementChild in element)
+                {
+                    if(elementChild.GetType() == typeof(XmlElement))
+                    {
+                        parseThroughTags((XmlElement)elementChild);
+                    }
+                }
+            }
+
+        }
+
+    }
+
+    //output matching results of the filter
+}
